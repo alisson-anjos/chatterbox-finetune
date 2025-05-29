@@ -27,12 +27,12 @@ If you like the model but need to scale or tune it for higher accuracy, check ou
 
 # Tips
 - **General Use (TTS and Voice Agents):**
-  - The default settings (`exaggeration=0.5`, `cfg=0.5`) work well for most prompts.
-  - If the reference speaker has a fast speaking style, lowering `cfg` to around `0.3` can improve pacing.
+  - The default settings (`exaggeration=0.5`, `cfg_weight=0.5`) work well for most prompts.
+  - If the reference speaker has a fast speaking style, lowering `cfg_weight` to around `0.3` can improve pacing.
 
 - **Expressive or Dramatic Speech:**
-  - Try lower `cfg` values (e.g. `~0.3`) and increase `exaggeration` to around `0.7` or higher.
-  - Higher `exaggeration` tends to speed up speech; reducing `cfg` helps compensate with slower, more deliberate pacing.
+  - Try lower `cfg_weight` values (e.g. `~0.3`) and increase `exaggeration` to around `0.7` or higher.
+  - Higher `exaggeration` tends to speed up speech; reducing `cfg_weight` helps compensate with slower, more deliberate pacing.
 
 
 # Installation
