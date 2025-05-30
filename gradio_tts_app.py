@@ -46,7 +46,7 @@ with gr.Blocks() as demo:
             text = gr.Textbox(value="What does the fox say?", label="Text to synthesize")
             ref_wav = gr.Audio(sources=["upload", "microphone"], type="filepath", label="Reference Audio File", value=None)
             exaggeration = gr.Slider(0.25, 2, step=.05, label="Exaggeration (Neutral = 0.5, extreme values can be unstable)", value=.5)
-            cfg_weight = gr.Slider(0.2, 1, step=.05, label="CFG/Pace", value=0.5)
+            cfg_weight = gr.Slider(0.0, 1, step=.05, label="CFG/Pace", value=0.5)
 
             with gr.Accordion("More options", open=False):
                 seed_num = gr.Number(value=0, label="Random seed (0 for random)")
