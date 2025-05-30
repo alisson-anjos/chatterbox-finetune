@@ -43,7 +43,11 @@ with gr.Blocks() as demo:
 
     with gr.Row():
         with gr.Column():
-            text = gr.Textbox(value="What does the fox say?", label="Text to synthesize")
+            text = gr.Textbox(
+                value="Now let's make my mum's favourite. So three mars bars into the pan. Then we add the tuna and just stir for a bit, just let the chocolate and fish infuse. A sprinkle of olive oil and some tomato ketchup. Now smell that. Oh boy this is going to be incredible.",
+                label="Text to synthesize (max chars 300)",
+                max_lines=5
+            )
             ref_wav = gr.Audio(sources=["upload", "microphone"], type="filepath", label="Reference Audio File", value=None)
             exaggeration = gr.Slider(0.25, 2, step=.05, label="Exaggeration (Neutral = 0.5, extreme values can be unstable)", value=.5)
             cfg_weight = gr.Slider(0.2, 1, step=.05, label="CFG/Pace", value=0.5)
