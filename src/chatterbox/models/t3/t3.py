@@ -89,11 +89,13 @@ class T3(nn.Module):
         t3_cond: T3Cond,
         text_tokens: torch.LongTensor,
         speech_tokens: torch.LongTensor,
+        cfg_weight: float = 0.0,
     ):
         # prepare input embeddings (skip backbone tranformer embeddings)
         cond_emb = self.prepare_conditioning(t3_cond)  # (B, len_cond, dim)
         text_emb = self.text_emb(text_tokens)  # (B, len_text, dim)
-        text_emb[1].zero_()  # CFG uncond
+        if cfg_weight > 0.0:
+            text_emb[1].zero_()  # CFG uncond
 
         speech_emb = self.speech_emb(speech_tokens)  # (B, len_speech, dim)
         if self.hp.input_pos_emb == "learned":
@@ -244,6 +246,7 @@ class T3(nn.Module):
             t3_cond=t3_cond,
             text_tokens=text_tokens,
             speech_tokens=initial_speech_tokens,
+            cfg_weight=cfg_weight,
         )
 
         # In order to use the standard HF generate method, we need to extend some methods to inject our custom logic
@@ -297,8 +300,11 @@ class T3(nn.Module):
         # batch_size=2 for CFG
         bos_embed = torch.cat([bos_embed, bos_embed])
 
-        # Combine condition and BOS token for the initial input
-        inputs_embeds = torch.cat([embeds, bos_embed], dim=1)
+        # Combine condition and BOS token for the initial input if cfg_weight > 0
+        if cfg_weight > 0:
+            inputs_embeds = torch.cat([embeds, bos_embed], dim=1)
+        else:
+            inputs_embeds = embeds
 
         # Track generated token ids; start with the BOS token.
         generated_ids = bos_token.clone()
@@ -325,9 +331,11 @@ class T3(nn.Module):
             logits = output.logits[:, -1, :]
 
             # CFG
-            logits_cond = logits[0:1]
-            logits_uncond = logits[1:2]
-            logits = logits_cond + cfg_weight * (logits_cond - logits_uncond)
+            if cfg_weight > 0.0:
+                logits_cond = logits[0:1]
+                logits_uncond = logits[1:2]
+                logits = logits_cond + cfg_weight * (logits_cond - logits_uncond)
+
             logits = logits.squeeze(1)
 
             # Apply temperature scaling.
@@ -354,7 +362,8 @@ class T3(nn.Module):
             next_token_embed = next_token_embed + self.speech_pos_emb.get_fixed_embedding(i + 1)
 
             #  For CFG
-            next_token_embed = torch.cat([next_token_embed, next_token_embed])
+            if cfg_weight > 0.0:
+                next_token_embed = torch.cat([next_token_embed, next_token_embed])
 
             # Forward pass with only the new token and the cached past.
             output = self.patched_model(
