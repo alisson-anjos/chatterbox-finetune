@@ -35,6 +35,8 @@ class S3Tokenizer(S3TokenizerV2):
     ):
         super().__init__(name)
 
+        self.name = name
+
         self.n_fft = 400
         _mel_filters = librosa.filters.mel(
             sr=S3_SR,

@@ -215,6 +215,30 @@ class S3Token2Mel(torch.nn.Module):
         )
         return output_mels
 
+    @torch.inference_mode()
+    def flow_inference(self, **batch):
+        required_keys = [
+            "speech_token", "speech_token_len",
+            "prompt_token", "prompt_token_len",
+            "prompt_feat", "prompt_feat_len",
+            "embedding"
+        ]
+        for key in required_keys:
+            if key not in batch:
+                raise ValueError(f"Missing key '{key}' in batch for flow_inference")
+        
+        return self.flow.inference(
+            token=batch["speech_token"],
+            token_len=batch["speech_token_len"],
+            prompt_token=batch["prompt_token"],
+            prompt_token_len=batch["prompt_token_len"],
+            prompt_feat=batch["prompt_feat"],
+            prompt_feat_len=batch["prompt_feat_len"],
+            embedding=batch["embedding"],
+            finalize=batch.get("finalize", True),
+        )
+
+
 
 class S3Token2Wav(S3Token2Mel):
     """

@@ -240,3 +240,46 @@ class CausalMaskedDiffWithXvec(torch.nn.Module):
         feat = feat[:, :, mel_len1:]
         assert feat.shape[2] == mel_len2
         return feat.float(), None  # NOTE jrm: why are they returning None here?
+
+    def forward(self, batch: dict, device: Optional[torch.device] = None) -> Dict[str, Optional[torch.Tensor]]:
+        if device is None:
+            device = batch['speech_token'].device
+
+        token = batch['speech_token'].to(device)
+        token_len = batch['speech_token_len'].to(device)
+        feat = batch['speech_feat'].to(device)
+        feat_len = batch['speech_feat_len'].to(device)
+        embedding = batch['embedding'].to(device)
+
+        # xvec projection
+        embedding = F.normalize(embedding, dim=1)
+        embedding = self.spk_embed_affine_layer(embedding)
+
+        # concat text and prompt_text
+        mask = (~make_pad_mask(token_len)).float().unsqueeze(-1).to(device)
+        token = self.input_embedding(torch.clamp(token, min=0)) * mask
+
+        # text encode
+        h, h_lengths = self.encoder(token, token_len)
+        h = self.encoder_proj(h)
+
+        # get conditions
+        conds = torch.zeros(feat.shape, device=token.device)
+        for i, j in enumerate(feat_len):
+            if random.random() < 0.5:
+                continue
+            index = random.randint(0, int(0.3 * j))
+            conds[i, :index] = feat[i, :index]
+        conds = conds.transpose(1, 2)
+
+        mask = (~make_pad_mask(feat_len)).to(h)
+        feat = F.interpolate(feat.unsqueeze(dim=1), size=h.shape[1:], mode="nearest").squeeze(dim=1)
+        loss, _ = self.decoder.compute_loss(
+            feat.transpose(1, 2).contiguous(),
+            mask.unsqueeze(1),
+            h.transpose(1, 2).contiguous(),
+            embedding,
+            cond=conds
+        )
+        return {'loss': loss}
+

@@ -53,8 +53,11 @@ def mel_spectrogram(y, n_fft=1920, num_mels=80, sampling_rate=24000, hop_size=48
         mel_basis[str(fmax) + "_" + str(y.device)] = torch.from_numpy(mel).float().to(y.device)
         hann_window[str(y.device)] = torch.hann_window(win_size).to(y.device)
 
+    # y = torch.nn.functional.pad(
+    #     y.unsqueeze(1), (int((n_fft - hop_size) / 2), int((n_fft - hop_size) / 2)), mode="reflect"
+    # )
     y = torch.nn.functional.pad(
-        y.unsqueeze(1), (int((n_fft - hop_size) / 2), int((n_fft - hop_size) / 2)), mode="reflect"
+        y, (int((n_fft - hop_size) / 2), int((n_fft - hop_size) / 2)), mode="constant", value=0.0 # type: ignore
     )
     y = y.squeeze(1)
 

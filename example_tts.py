@@ -12,7 +12,7 @@ else:
 
 print(f"Using device: {device}")
 
-model = ChatterboxTTS.from_pretrained(device=device)
+model = ChatterboxTTS.from_local("/home/alissonerdx/models/chatterbox", device=device)
 
 text = "Ezreal and Jinx teamed up with Ahri, Yasuo, and Teemo to take down the enemy's Nexus in an epic late-game pentakill."
 wav = model.generate(text)
