@@ -46,3 +46,4 @@ checkpoints/
 
 # Ignore generated sample .wav files
 **/*.wav
+chatterbox_finetune_logs/*.tfevents.*
